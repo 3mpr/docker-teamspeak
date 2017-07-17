@@ -38,7 +38,80 @@ static char BINARY_PATH[]           = "/usr/local/share/teamspeak/ts3server";
                                    Functions
    ------------------------------------------------------------------------- */
 
-int checkdir(char *path)
+int check_dir(char *path);
+
+FILE* open_file(char *path, char* mode);
+
+void init_default_conf();
+
+void start_vanilla(int argc, char **argv);
+
+/* -------------------------------------------------------------------------
+                               Arguments parsing
+   ------------------------------------------------------------------------- */
+
+static error_t parse_opt(int key, char *arg, struct argp_state *state);
+
+static struct argp_option options[] =
+{
+    { "initialize", 'i', 0, 0,
+      "Initialize the server configuration and database" },
+    { "log-path", 'l', "PATH", 0, "Specify the logging directory" },
+    { "backend", 'b', "SQL_BACKEND", 0,
+      "Specify which database backend to use, default to sqlite" },
+    { "vanilla", 'v', 0, 0, "Starts the teamspeak3 server in vanilla mode, \
+    discarding this argument and passing all others to the teamspeak3 \
+    executable."},
+
+    { 0 }
+};
+
+static struct argp argp = { options, parse_opt, args_doc, doc };
+
+/* -------------------------------------------------------------------------
+                                      Main
+   ------------------------------------------------------------------------- */
+
+int main(int argc, char **argv)
+{
+    dictionary* configuration;
+    FILE* configuration_file;
+
+    configuration = iniparser_load(configuration_path);
+    if(!configuration)
+    {
+        init_default_conf();
+        configuration = iniparser_load(configuration_path);
+    }
+
+    argp_parse(&argp, argc, argv, 0, 0, configuration);
+
+    if(VANILLA)
+    {
+        printf("Supressing ts3w behaviour and starting default teamspeak3 \
+        server.");
+        start_vanilla(argc, argv);
+    }
+
+    if(SAVE)
+    {
+        configuration_file = open_file(configuration_path, "w");
+        iniparser_dump_ini(configuration, configuration_file);
+        fclose(configuration_file);
+    }
+
+    else
+    {
+        /* TODO - Temporary ini file */
+    }
+
+    iniparser_freedict(configuration);
+
+    return EXIT_SUCCESS;
+}
+
+
+int check_dir(char *path)
 {
     DIR *dir = opendir(path);
     int retval = 0;
@@ -125,24 +198,6 @@ void start_vanilla(int argc, char **argv)
     }
 }
 
-/* -------------------------------------------------------------------------
-                               Arguments parsing
-   ------------------------------------------------------------------------- */
-
-static struct argp_option options[] =
-{
-    { "initialize", 'i', 0, 0,
-      "Initialize the server configuration and database" },
-    { "log-path", 'l', "PATH", 0, "Specify the logging directory" },
-    { "backend", 'b', "SQL_BACKEND", 0,
-      "Specify which database backend to use, default to sqlite" },
-    { "vanilla", 'v', 0, 0, "Starts the teamspeak3 server in vanilla mode, \
-    discarding this argument and passing all others to the teamspeak3 \
-    executable."},
-
-    { 0 }
-};
-
 static error_t parse_opt(int key, char *arg, struct argp_state *state)
 {
     dictionary* rtconf = state->input;
@@ -158,7 +213,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
             break;
 
         case 'l':
-            if(!checkdir(arg))
+            if(!check_dir(arg))
                 argp_failure(state, 1, 0, "Unable to access \"%s\"", arg);
             iniparser_set(rtconf, ":logpath", arg);
             break;
@@ -176,51 +231,4 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
     }
 
     return 0;
-}
-
-static struct argp argp = { options, parse_opt, args_doc, doc };
-
-/* -------------------------------------------------------------------------
-                                      Main
-   ------------------------------------------------------------------------- */
-
-int main(int argc, char **argv)
-{
-    dictionary* configuration;
-    FILE* configuration_file;
-
-    printf("smth");
-
-    configuration = iniparser_load(configuration_path);
-    if(!configuration)
-    {
-        init_default_conf();
-        configuration = iniparser_load(configuration_path);
-    }
-    printf("smth2");
-
-    argp_parse(&argp, argc, argv, 0, 0, configuration);
-
-    if(VANILLA)
-    {
-        printf("Supressing ts3w behaviour and starting default teamspeak3 \
-        server.");
-        start_vanilla(argc, argv);
-    }
-
-    if(SAVE)
-    {
-        configuration_file = open_file(configuration_path, "w");
-        iniparser_dump_ini(configuration, configuration_file);
-        fclose(configuration_file);
-    }
-
-    else
-    {
-        /* TODO - Temporary ini file */
-    }
-
-    iniparser_freedict(configuration);
-
-    return EXIT_SUCCESS;
 }
