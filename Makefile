@@ -1,5 +1,7 @@
 CC=gcc
-CFLAGS=-Wall -pedantic -I.
+CFLAGS=-static -Wall -ansi -pedantic
+DEPS_DIR=iniparser
+DEPS=:libiniparser.a
 
-ts3w: ts3w.c
-	$(CC) -o ts3w ts3w.c $(CFLAGS)
+ts3w: ./src/ts3w.c
+	$(CC) ./src/ts3w.c -L$(DEPS_DIR) -l$(DEPS) $(CFLAGS) -o ts3w

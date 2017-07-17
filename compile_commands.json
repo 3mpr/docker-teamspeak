@@ -1,7 +1,0 @@
-[
-  {
-      "directory": "/home/eka/Documents/Dev/docker-teamspeak/build",
-      "command": "gcc -o ts3w ts3w.c -Wall -pedantic",
-      "file": "ts3w.c"
-  }
-]

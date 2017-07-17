@@ -16,7 +16,6 @@
 #include <stdlib.h>
 #include <argp.h>
 #include <dirent.h>
-#include <process.h>
 
 #include "../iniparser/src/dictionary.h"
 #include "../iniparser/src/iniparser.h"
