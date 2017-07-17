@@ -29,8 +29,8 @@ static char doc[]                   = "A simple teamspeak3 server wrapper.";
 static char args_doc[]              = "";
 
 static int INITIALIZE               = 0;
-static int SAVE                     = 0;
-static int VANILLA                  = 1;
+static int SAVE                     = 1;
+static int VANILLA                  = 0;
 static char configuration_path[]    = "/etc/teamspeak/conf.ini";
 static char BINARY_PATH[]           = "/usr/local/share/teamspeak/ts3server";
 
@@ -172,6 +172,7 @@ int main(int argc, char **argv)
 {
     dictionary* configuration;
     FILE* configuration_file;
+    char* command_args[2];
 
     configuration = iniparser_load(configuration_path);
     if(!configuration)
@@ -183,7 +184,11 @@ int main(int argc, char **argv)
     argp_parse(&argp, argc, argv, 0, 0, configuration);
 
     if(VANILLA)
+    {
+        printf("Supressing ts3w behaviour and starting default teamspeak3 \
+        server.");
         start_vanilla(argc, argv);
+    }
 
     if(SAVE)
     {
@@ -192,7 +197,22 @@ int main(int argc, char **argv)
         fclose(configuration_file);
     }
 
+    else
+    {
+        /* TODO - Temporary ini file */
+    }
+
     iniparser_freedict(configuration);
+
+    command_args[0] = BINARY_PATH;
+    command_args[1] = "inifile=%s", configuration_path;
+    printf(command_args[1]);
+
+    if(!execv(BINARY_PATH, command_args))
+    {
+        fprintf(stderr, "ERROR %d : %s", errno, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
 
     return EXIT_SUCCESS;
 }
