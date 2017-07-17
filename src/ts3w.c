@@ -120,6 +120,9 @@ static struct argp_option options[] =
     { "log-path", 'l', "PATH", 0, "Specify the logging directory" },
     { "backend", 'b', "SQL_BACKEND", 0,
       "Specify which database backend to use, default to sqlite" },
+    { "vanilla", 'v', 0, 0, "Starts the teamspeak3 server in vanilla mode, \
+    discarding this argument and passing all others to the teamspeak3 \
+    executable."},
 
     { 0 }
 };
