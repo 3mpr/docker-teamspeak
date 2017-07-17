@@ -23,7 +23,7 @@ RUN apk add --update --no-cache mariadb-client procps \
 # Add starting script
 ADD ["ts3w", "/usr/local/bin"]
 ADD ["ts3_conf.ini", "/tmp"]
-RUN chmod +x /usr/local/bin/teamspeak3
+RUN chmod +x /usr/local/bin/ts3w
 
 EXPOSE 9987/udp 10011 30033 41144
 VOLUME /etc/teamspeak
