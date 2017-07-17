@@ -52,29 +52,31 @@ int checkdir(char *path)
     return retval;
 }
 
+FILE* open_file(char *path, char* mode)
+{
+    FILE *file_;
+    char error_msg[50];
+
+    file_ = fopen(path, mode);
+    if(!file_)
+    {
+        sprintf(error_msg, "ERROR %d: %s", errno, strerror(errno));
+        perror(error_msg);
+        exit(EXIT_FAILURE);
+    }
+
+    return file_;
+}
+
 void init_default_conf()
 {
     FILE *default_conf, *conf;
     char ch;
-    char error_msg[50];
 
     printf("Initializing default configuration... ");
 
-    default_conf = fopen("/tmp/ts3_conf.ini", "r");
-    if(!default_conf)
-    {
-        sprintf(error_msg, "ERROR %d: %s", errno, strerror(errno));
-        perror(error_msg);
-        exit(EXIT_FAILURE);
-    }
-
-    conf = fopen(configuration_path, "w");
-    if(!conf)
-    {
-        sprintf(error_msg, "ERROR %d: %s", errno, strerror(errno));
-        perror(error_msg);
-        exit(EXIT_FAILURE);
-    }
+    default_conf = open_file("/tmp/ts3_conf.ini", "r");
+    conf = open_file(configuration_path, "w");
 
     while((ch = fgetc(default_conf)) != EOF)
         fputc(ch, conf);
@@ -186,7 +188,6 @@ int main(int argc, char **argv)
 {
     dictionary* configuration;
     FILE* configuration_file;
-    char* command_args[2];
 
     printf("smth");
 
@@ -209,7 +210,7 @@ int main(int argc, char **argv)
 
     if(SAVE)
     {
-        configuration_file = fopen(configuration_path, "w");
+        configuration_file = open_file(configuration_path, "w");
         iniparser_dump_ini(configuration, configuration_file);
         fclose(configuration_file);
     }
@@ -220,16 +221,6 @@ int main(int argc, char **argv)
     }
 
     iniparser_freedict(configuration);
-
-    command_args[0] = BINARY_PATH;
-    command_args[1] = "inifile=%s", configuration_path;
-    printf(command_args[1]);
-
-    if(!execv(BINARY_PATH, command_args))
-    {
-        fprintf(stderr, "ERROR %d : %s", errno, strerror(errno));
-        exit(EXIT_FAILURE);
-    }
 
     return EXIT_SUCCESS;
 }
