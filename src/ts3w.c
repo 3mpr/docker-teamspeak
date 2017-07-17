@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <argp.h>
 #include <dirent.h>
+#include <errno.h>
 
 #include "../iniparser/src/dictionary.h"
 #include "../iniparser/src/iniparser.h"
@@ -31,6 +32,7 @@ static int INITIALIZE               = 0;
 static int SAVE                     = 0;
 static int VANILLA                  = 1;
 static char configuration_path[]    = "/etc/teamspeak/conf.ini";
+static char BINARY_PATH[]           = "/usr/local/share/teamspeak/ts3server";
 
 /* -------------------------------------------------------------------------
                                    Functions
@@ -91,13 +93,19 @@ void start_vanilla(int argc, char **argv)
     }
     argc--;
 
-    command = malloc((argc + 1) * sizeof(char *));
-    command[0] = malloc(sizeof("/usr/local/share/teamspeak/ts3server"));
-    command[0] = "/usr/local/share/teamspeak/ts3server";
+    command = malloc((argc) * sizeof(char *));
+    command[0] = malloc(sizeof(BINARY_PATH));
+    command[0] = BINARY_PATH;
     for(cpt = 1; cpt <= argc; cpt++)
     {
-        command[cpt + 1] = malloc(sizeof(argv[cpt]));
-        command[cpt + 1] = argv[cpt];
+        command[cpt] = malloc(sizeof(argv[cpt]));
+        command[cpt] = argv[cpt];
+    }
+
+    if(!execv(BINARY_PATH, command))
+    {
+        fprintf(stderr, "ERROR %d : %s", errno, strerror(errno));
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -161,8 +169,6 @@ int main(int argc, char **argv)
 {
     dictionary* configuration;
     FILE* configuration_file;
-    int cpt, shift;
-    char **command;
 
     configuration = iniparser_load(configuration_path);
     if(!configuration)
