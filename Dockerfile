@@ -10,7 +10,7 @@ RUN addgroup -g 503 teamspeak \
 RUN wget http://dl.4players.de/ts/releases/${TEAMSPEAK_VERSION}/teamspeak3-server_linux_amd64-${TEAMSPEAK_VERSION}.tar.bz2 -O /tmp/teamspeak.tar.bz2 \
  && tar jxf /tmp/teamspeak.tar.bz2 -C /usr/local/share/ \
  && mv /usr/local/share/teamspeak3-server_*/* /usr/local/share/teamspeak \
- && rm /tmp/teamspeak.tar.bz2 && rmdir /usr/local/share/teamspeak3-server_*)-\
+ && rm /tmp/teamspeak.tar.bz2 && rmdir /usr/local/share/teamspeak3-server_* \
  && chown -R teamspeak:teamspeak /usr/local/share/teamspeak \
  && mkdir -p /var/log/teamspeak && chown -R teamspeak:teamspeak /var/log/teamspeak \
  && mkdir /etc/teamspeak && chown -R teamspeak:teamspeak /etc/teamspeak
@@ -21,7 +21,7 @@ RUN apk add --update --no-cache mariadb-client procps \
  && export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/lib64"
 
 # Add starting script
-ADD ["teamspeak3", "/usr/local/bin"]
+ADD ["ts3w", "/usr/local/bin"]
 ADD ["ts3_conf.ini", "/tmp"]
 RUN chmod +x /usr/local/bin/teamspeak3
 
@@ -31,4 +31,4 @@ VOLUME /var/log/teamspeak
 USER teamspeak
 
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
-CMD ["teamspeak3"]
+CMD ["ts3w"]
