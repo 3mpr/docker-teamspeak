@@ -56,11 +56,25 @@ void init_default_conf()
 {
     FILE *default_conf, *conf;
     char ch;
+    char error_msg[50];
 
     printf("Initializing default configuration... ");
 
     default_conf = fopen("/tmp/ts3_conf.ini", "r");
+    if(!default_conf)
+    {
+        sprintf(error_msg, "ERROR %d: %s", errno, strerror(errno));
+        perror(error_msg);
+        exit(EXIT_FAILURE);
+    }
+
     conf = fopen(configuration_path, "w");
+    if(!conf)
+    {
+        sprintf(error_msg, "ERROR %d: %s", errno, strerror(errno));
+        perror(error_msg);
+        exit(EXIT_FAILURE);
+    }
 
     while((ch = fgetc(default_conf)) != EOF)
         fputc(ch, conf);
@@ -174,12 +188,15 @@ int main(int argc, char **argv)
     FILE* configuration_file;
     char* command_args[2];
 
+    printf("smth");
+
     configuration = iniparser_load(configuration_path);
     if(!configuration)
     {
         init_default_conf();
         configuration = iniparser_load(configuration_path);
     }
+    printf("smth2");
 
     argp_parse(&argp, argc, argv, 0, 0, configuration);
 
