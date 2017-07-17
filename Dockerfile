@@ -1,6 +1,7 @@
 FROM 3mpr/baseimage:alpine-glibc
 
 ENV TEAMSPEAK_VERSION 3.0.13
+ENV LD_LIBRARY_PATH=/usr/local/share/teamspeak:/usr/local/share/teamspeak/redist
 
 # Add teamspeak group & user
 RUN addgroup -g 503 teamspeak \
@@ -18,7 +19,7 @@ RUN wget http://dl.4players.de/ts/releases/${TEAMSPEAK_VERSION}/teamspeak3-serve
 
 # MariaDB library linking
 RUN apk add --update --no-cache mariadb-client \
- && export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/share/teamspeak"
+ && export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/lib64:/usr/local/share/teamspeak"
 
 # Add starting script
 ADD ["ts3w", "/usr/local/bin"]
@@ -32,4 +33,4 @@ WORKDIR /usr/local/share/teamspeak
 USER teamspeak
 
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
-CMD ["LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/share/teamspeak", "ts3w"]
+CMD ["ts3w"]

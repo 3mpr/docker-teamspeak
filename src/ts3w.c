@@ -25,17 +25,18 @@
                                    Constants
    ------------------------------------------------------------------------- */
 
-static char doc[]                   = "A simple teamspeak3 server wrapper.";
-static char args_doc[]              = "";
+static char DOC[]                   = "A simple teamspeak3 server wrapper.";
+static char ARGS_DOC[]              = "";
 
 static int INITIALIZE               = 0;
 static int SAVE                     = 1;
+static int CONF_CHANGED             = 0;
 static int VANILLA                  = 0;
 static char configuration_path[]    = "/etc/teamspeak/conf.ini";
 static char BINARY_PATH[]           = "/usr/local/share/teamspeak/ts3server";
 
 /* -------------------------------------------------------------------------
-                                   Functions
+                              Functions prototypes
    ------------------------------------------------------------------------- */
 
 int check_dir(char *path);
@@ -46,6 +47,8 @@ void init_default_conf();
 
 void start_vanilla(int argc, char **argv);
 
+void start();
+
 /* -------------------------------------------------------------------------
                                Arguments parsing
    ------------------------------------------------------------------------- */
@@ -54,19 +57,23 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state);
 
 static struct argp_option options[] =
 {
-    { "initialize", 'i', 0, 0,
-      "Initialize the server configuration and database" },
+    { "initialize", 'i', 0, 0, "Initialize the server configuration "
+     "and database" },
+
     { "log-path", 'l', "PATH", 0, "Specify the logging directory" },
-    { "backend", 'b', "SQL_BACKEND", 0,
-      "Specify which database backend to use, default to sqlite" },
-    { "vanilla", 'v', 0, 0, "Starts the teamspeak3 server in vanilla mode, \
-    discarding this argument and passing all others to the teamspeak3 \
-    executable."},
+
+    { "backend", 'b', "SQL_BACKEND", 0, "Specify which database backend to "
+      "use, default to sqlite" },
+
+    { "vanilla", 'v', 0, 0, "Starts the teamspeak3 server in vanilla mode,"
+    "discarding this parameter and passing all arguments to the teamspeak3"
+    "executable."},
 
     { 0 }
 };
 
-static struct argp argp = { options, parse_opt, args_doc, doc };
+
+static struct argp argp = { options, parse_opt, ARGS_DOC, DOC };
 
 /* -------------------------------------------------------------------------
                                       Main
@@ -88,12 +95,12 @@ int main(int argc, char **argv)
 
     if(VANILLA)
     {
-        printf("Supressing ts3w behaviour and starting default teamspeak3 \
-        server.");
+        printf("Supressing ts3w behaviour and starting default teamspeak3 "
+        "server.");
         start_vanilla(argc, argv);
     }
 
-    if(SAVE)
+    if(SAVE && CONF_CHANGED)
     {
         configuration_file = open_file(configuration_path, "w");
         iniparser_dump_ini(configuration, configuration_file);
@@ -105,11 +112,16 @@ int main(int argc, char **argv)
         /* TODO - Temporary ini file */
     }
 
+    start();
+
     iniparser_freedict(configuration);
 
     return EXIT_SUCCESS;
 }
 
+/* -------------------------------------------------------------------------
+                             Functions definitions
+   ------------------------------------------------------------------------- */
 
 int check_dir(char *path)
 {
@@ -182,7 +194,7 @@ void start_vanilla(int argc, char **argv)
     }
     argc--;
 
-    command = malloc((argc) * sizeof(char *));
+    command = malloc(argc * sizeof(char *));
     command[0] = malloc(sizeof(BINARY_PATH));
     command[0] = BINARY_PATH;
     for(cpt = 1; cpt <= argc; cpt++)
@@ -190,6 +202,26 @@ void start_vanilla(int argc, char **argv)
         command[cpt] = malloc(sizeof(argv[cpt]));
         command[cpt] = argv[cpt];
     }
+
+    if(!execv(BINARY_PATH, command))
+    {
+        fprintf(stderr, "ERROR %d : %s", errno, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+}
+
+void start()
+{
+    char* ini_arg;
+    char **command;
+    ini_arg = malloc(30 * sizeof(char));
+    sprintf(ini_arg, "inifile=%s", configuration_path);
+
+    command = malloc(2 * sizeof(char *));
+    command[0] = malloc(sizeof(BINARY_PATH));
+    command[0] = BINARY_PATH;
+    command[1] = malloc(sizeof(ini_arg));
+    command[1] = ini_arg;
 
     if(!execv(BINARY_PATH, command))
     {
@@ -209,13 +241,13 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
             break;
 
         case 'b':
-            iniparser_set(rtconf, ":dbplugin", arg);
+            iniparser_set(rtconf, "configuration:dbplugin", arg);
             break;
 
         case 'l':
             if(!check_dir(arg))
                 argp_failure(state, 1, 0, "Unable to access \"%s\"", arg);
-            iniparser_set(rtconf, ":logpath", arg);
+            iniparser_set(rtconf, "configuration:logpath", arg);
             break;
 
         case 's':
@@ -224,7 +256,13 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 
         case 'v':
             VANILLA = 1;
-            return 0;
+            break;
+
+        case ARGP_KEY_ARG:
+            if(VANILLA)
+                return 0;
+            argp_failure(state, 1, 0, "arguments are only accepted in vanilla "
+            "mode");
 
         default:
             return ARGP_ERR_UNKNOWN;
