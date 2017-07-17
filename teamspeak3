@@ -1,7 +1,0 @@
-#!/usr/bin/env sh
-
-if [ ! -f /etc/teamspeak/conf.ini ]; then
-    cp /tmp/ts3_conf.ini /etc/teamspeak/conf.ini
-fi
-
-/usr/local/share/teamspeak/ts3server_startscript.sh start inifile=/etc/teamspeak/conf.ini

@@ -10,7 +10,7 @@ RUN addgroup -g 503 teamspeak \
 RUN wget http://dl.4players.de/ts/releases/${TEAMSPEAK_VERSION}/teamspeak3-server_linux_amd64-${TEAMSPEAK_VERSION}.tar.bz2 -O /tmp/teamspeak.tar.bz2 \
  && tar jxf /tmp/teamspeak.tar.bz2 -C /usr/local/share/ \
  && mv /usr/local/share/teamspeak3-server_*/* /usr/local/share/teamspeak \
- && rm /tmp/teamspeak.tar.bz2 \
+ && rm /tmp/teamspeak.tar.bz2 && rmdir /usr/local/share/teamspeak3-server_*)-\
  && chown -R teamspeak:teamspeak /usr/local/share/teamspeak \
  && mkdir -p /var/log/teamspeak && chown -R teamspeak:teamspeak /var/log/teamspeak \
  && mkdir /etc/teamspeak && chown -R teamspeak:teamspeak /etc/teamspeak
@@ -28,7 +28,7 @@ RUN chmod +x /usr/local/bin/teamspeak3
 EXPOSE 9987/udp 10011 30033 41144
 VOLUME /etc/teamspeak
 VOLUME /var/log/teamspeak
-WORKDIR /opt/teamspeak/
 USER teamspeak
 
-ENTRYPOINT ["/usr/local/bin/dumb-init", "teamspeak3"]
+ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
+CMD ["teamspeak3"]
